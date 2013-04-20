@@ -167,7 +167,7 @@ class CmisController < ApplicationController
     
     begin
       cmis_connect
-      repositoryDocuments = get_documents_in_folder(@document.path)
+      repositoryDocuments = get_documents_in_folder(@document.path, @project.id)
       repositoryDocuments.each{|repositoryDoc|
         # Check if the cmisDocument is not mapped on redmine
         found = false
@@ -197,7 +197,7 @@ class CmisController < ApplicationController
     begin
       cmis_connect
       attachments.each{|attachment|      
-        repositoryDocument = get_document(attachment.path)
+        repositoryDocument = get_document(attachment.path, @project.id)
         if (!repositoryDocument)
           # Document deleted on CMIS ECM
           attachment.dirty = true
@@ -229,7 +229,7 @@ class CmisController < ApplicationController
     
     begin
       cmis_connect
-      repositoryDocument = get_document(attachment.path)
+      repositoryDocument = get_document(attachment.path, @project.id)
       
       if (!repositoryDocument)
         # Document deleted on CMIS ECM
@@ -261,12 +261,13 @@ class CmisController < ApplicationController
       # Each of these folders should map to a doc category (in human language)
       projects = Project.find(:all)      
       projects.each do | p |
-        repo_categories = get_folders_in_folder(p.identifier)
+        logger.warn p.identifier
+        repo_categories = get_folders_in_folder(p.identifier, p.id)
         repo_categories.each do | c |
           category = Enumeration.find(:first, :conditions => ['type = ? AND name = ?', 'DocumentCategory', c.cmis.name.humanize])
           
           if category
-            repo_documents = get_folders_in_folder(p.identifier + "/" + c.cmis.name)
+            repo_documents = get_folders_in_folder(p.identifier + "/" + c.cmis.name, p.id)
             repo_documents.each do | d |
               document = map_repository_folder_to_redmine_doc(p, d, category)
               if !CmisDocument.find(:first, :conditions => ['path = ?', document.path])

@@ -47,6 +47,7 @@ class CmisAttachment < ActiveRecord::Base
  
   def create_cmis_att
   	logger.debug("Creating new document")
+  	project_id = CmisDocument.find(self.cmis_document_id).project_id
     if (self.created_on == nil)
   	 self.created_on = Time.now
     end
@@ -57,7 +58,7 @@ class CmisAttachment < ActiveRecord::Base
     if @temp_file && (@temp_file.size > 0) && self.path_archivo && self.nombre_archivo
       begin
     		cmis_connect
-        save_document(self.path_archivo, self.nombre_archivo, get_stream_content(@temp_file.path))
+        save_document(self.path_archivo, self.nombre_archivo, get_stream_content(@temp_file.path), project_id)
       rescue CmisException=>e
         raise e
       rescue Errno::ECONNREFUSED=>e
@@ -75,7 +76,7 @@ class CmisAttachment < ActiveRecord::Base
     if self.path != "" && self.path_archivo && self.nombre_archivo
       begin
     	 cmis_connect
-    	 remove_document(self.path)
+    	 remove_document(self.path, CmisDocument.find(self.cmis_document_id).project_id)
       rescue CmisException=>e
         raise e
       rescue Errno::ECONNREFUSED=>e
