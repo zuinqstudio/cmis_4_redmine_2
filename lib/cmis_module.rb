@@ -263,7 +263,7 @@ module CmisModule
     
       # Remove documents in folder
       folder.items.select {|o| o.is_a?(ActiveCMIS::Document)}.map {|o|
-        remove_document_relative(compose_path(path, o.name), isRelativePath)
+        remove_document_relative(compose_path(path, o.name), project_id, isRelativePath)
       }
       
       folder.destroy
