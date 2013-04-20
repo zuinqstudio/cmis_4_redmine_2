@@ -252,6 +252,43 @@ class CmisController < ApplicationController
     render :partial => 'attachment', :locals => {:attachment => attachment}    
   end
  
+  def sync_cmis_space(p)
+    repo_categories = get_folders_in_folder(p.identifier, p.id)
+    repo_categories.each do | c |
+      category = Enumeration.find(:first, :conditions => ['type = ? AND name = ?', 'DocumentCategory', c.cmis.name.humanize])
+    
+      if category
+        repo_documents = get_folders_in_folder(p.identifier + "/" + c.cmis.name, p.id)
+        repo_documents.each do | d |
+          document = map_repository_folder_to_redmine_doc(p, d, category)
+          if !CmisDocument.find(:first, :conditions => ['path = ?', document.path])
+            document.save
+            end
+        end
+      else
+        logger.debug("Document category '" + c.cmis.name.humanize + "' couldn't be found")
+        flash[:warning] = l(:cmis_couldnt_find_category)
+      end
+    
+      category = nil
+    end
+  end
+  
+  def sync_cmis_project
+    project_id = params[:project_id]
+    project = Project.find(project_id)
+    begin
+      cmis_connect
+      sync_cmis_space(project)
+      flash[:notice] = l(:cmis_documents_sync_succeded) 
+    rescue Errno::ECONNREFUSED=>e
+        flash[:error] = l(:unable_connect_cmis)
+    end
+    
+    redirect_to :back
+ 
+  end
+  
   def sync_cmis_spaces
     
     begin
@@ -261,26 +298,7 @@ class CmisController < ApplicationController
       # Each of these folders should map to a doc category (in human language)
       projects = Project.find(:all)      
       projects.each do | p |
-        logger.warn p.identifier
-        repo_categories = get_folders_in_folder(p.identifier, p.id)
-        repo_categories.each do | c |
-          category = Enumeration.find(:first, :conditions => ['type = ? AND name = ?', 'DocumentCategory', c.cmis.name.humanize])
-          
-          if category
-            repo_documents = get_folders_in_folder(p.identifier + "/" + c.cmis.name, p.id)
-            repo_documents.each do | d |
-              document = map_repository_folder_to_redmine_doc(p, d, category)
-              if !CmisDocument.find(:first, :conditions => ['path = ?', document.path])
-                document.save
-              end
-            end
-          else
-            logger.debug("Document category '" + c.cmis.name.humanize + "' couldn't be found")
-            flash[:warning] = l(:cmis_couldnt_find_category)
-          end
-          
-          category = nil
-        end
+        sync_cmis_space(p)
       end
       flash[:notice] = l(:cmis_documents_sync_succeded)  
     
