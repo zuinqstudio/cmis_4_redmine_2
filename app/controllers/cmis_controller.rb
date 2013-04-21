@@ -46,7 +46,13 @@ class CmisController < ApplicationController
 	    when 'title'
 	      @grouped = @documents.group_by {|d| d.title.first.upcase}
 	    when 'author'
-	      @grouped = @documents.group_by {|d| d.author.name.upcase}
+	      @grouped = @documents.group_by {|d| 
+	        if d.author
+            d.author.name.upcase
+	        else
+	          t(:unknown)
+	        end
+	        }
 	    else
 	      @grouped = @documents.group_by(&:category)
     end
