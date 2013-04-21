@@ -5,11 +5,7 @@ class CmisProjectSettingController < ApplicationController
   before_filter :find_project, :authorize, :find_user
   
   def update
-    setting = CmisProjectSetting.find @project.id
-    unless setting
-      setting = CmisProjectSetting.new
-      setting.project_id = @project.id
-    end
+    setting = CmisProjectSetting.find_or_create(@project.id)
     begin
        setting.transaction do
           setting.documents_base_path = params[:documents_base_path]
