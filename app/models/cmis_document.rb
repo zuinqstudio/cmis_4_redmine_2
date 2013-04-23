@@ -34,7 +34,9 @@ class CmisDocument < ActiveRecord::Base
 
   acts_as_searchable :columns => ['title', "#{table_name}.title"], :include => :project
 
-  validates_presence_of :project, :title, :category
+# category is now optional
+#  validates_presence_of :project, :title, :category
+  validates_presence_of :project, :title
   validates_length_of :title, :maximum => 60 
 
   attr_accessor :unsaved_attachments

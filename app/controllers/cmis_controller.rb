@@ -37,7 +37,12 @@ class CmisController < ApplicationController
   unloadable
 
   def index
-    @sort_by = %w(category date title author).include?(params[:sort_by]) ? params[:sort_by] : 'category'
+    #if categories are not used, fall back to title
+    if(CmisProjectSetting.use_category(params[:project_id]))
+        @sort_by = %w(category date title author).include?(params[:sort_by]) ? params[:sort_by] : 'category'
+    else
+        @sort_by = %w(date title author).include?(params[:sort_by]) ? params[:sort_by] : 'title'
+    end
   	@documents = CmisDocument.find :all, :conditions => ["project_id=" + @project.id.to_s]
   
   	case @sort_by
@@ -77,7 +82,7 @@ class CmisController < ApplicationController
   	      render_attachment_warning_if_needed(@document)
   		  
     		  attachments[:warnings].each{|warning|
-    			flash[:warning]=warning
+    		    flash[:warning]=warning
     		  }
     		  
     		  subject = l(:cmis_subject_add_document, :author => User.current, :proyecto => @project.name)
@@ -259,25 +264,32 @@ class CmisController < ApplicationController
   end
  
   def sync_cmis_space(p)
-    repo_categories = get_folders_in_folder(p.identifier, p.id)
-    repo_categories.each do | c |
-      category = Enumeration.find(:first, :conditions => ['type = ? AND name = ?', 'DocumentCategory', c.cmis.name.humanize])
-    
-      if category
-        repo_documents = get_folders_in_folder(p.identifier + "/" + c.cmis.name, p.id)
-        repo_documents.each do | d |
-          document = map_repository_folder_to_redmine_doc(p, d, category)
+      repo_first_level = get_folders_in_folder(p.identifier, p.id)
+      repo_first_level.each do | c |
+        #if categories are used, first level correspond to a category
+        #else it the name of the document
+        if(CmisProjectSetting.use_category(p.id))
+          category = Enumeration.find(:first, :conditions => ['type = ? AND name = ?', 'DocumentCategory', c.cmis.name.humanize])
+          if category
+            repo_documents = get_folders_in_folder(p.identifier + "/" + c.cmis.name, p.id)
+            repo_documents.each do | d |
+              document = map_repository_folder_to_redmine_doc(p, d, category)
+              if !CmisDocument.find(:first, :conditions => ['path = ?', document.path])
+                document.save
+              end
+            end
+          else
+            logger.debug("Document category '" + c.cmis.name.humanize + "' couldn't be found")
+            flash[:warning] = l(:cmis_couldnt_find_category)
+          end
+          category = nil
+        else
+          document = map_repository_folder_to_redmine_doc(p, c, nil)
           if !CmisDocument.find(:first, :conditions => ['path = ?', document.path])
             document.save
-            end
-        end
-      else
-        logger.debug("Document category '" + c.cmis.name.humanize + "' couldn't be found")
-        flash[:warning] = l(:cmis_couldnt_find_category)
+          end
+        end        
       end
-    
-      category = nil
-    end
   end
   
   def sync_cmis_project
@@ -336,7 +348,9 @@ class CmisController < ApplicationController
     document = CmisDocument.new
     
     document.project_id = project.id
-    document.category_id = category.id
+    if(category)
+      document.category_id = category.id
+    end
     document.author_id = User.current
     document.title = folder.cmis.name
     document.path = CmisDocument.document_category_path(project, category, document)

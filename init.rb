@@ -32,14 +32,15 @@ Redmine::Plugin.register :redmine_cmis do
 	url 'http://www.zuinqstudio.com/en/funny-experiments-downloads'
 	author_url 'http://www.zuinqstudio.com'
 
-	menu :project_menu, :cmis, { :controller => 'cmis', :action => 'index' }, :caption => 'Cmis', :after => :documents, :param => :project_id
+	menu :project_menu, :cmis, { :controller => 'cmis', :action => 'index' }, :caption => :cmis, :after => :documents, :param => :project_id
 
 	settings :default => {
     'server_url' => 'http://localhost:8080/alfresco/service/cmis',
     'repository_id' => 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
 		'server_login' => 'user',
 		'server_password' => 'password',
-		'documents_path_base' => 'REDMINE'
+		'documents_path_base' => 'REDMINE',
+		'use_category' => true
 	}, :partial => 'settings/cmis_settings'
 
 	project_module :cmis do

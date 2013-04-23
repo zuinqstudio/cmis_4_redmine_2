@@ -15,8 +15,12 @@
 <%= error_messages_for 'document' %>
 <div class="box tabular">
 
-	<p><label for="document_category_id"><%=l(:field_category)%></label>
-	<%= select 'document', 'category_id', DocumentCategory.all.collect {|c| [c.name, c.id]}, {} %></p>
+	<% if(CmisProjectSetting.use_category(@project)) %>
+	
+		<p><label for="document_category_id"><%=l(:field_category)%></label>
+		<%= select 'document', 'category_id', DocumentCategory.all.collect {|c| [c.name, c.id]}, {} %></p>
+
+	<% end %>
 
 	<p title="<%=h l(:formato_nombre_titulo)%>"><label for="document_title"><%=l(:field_title)%> <span class="required">*</span></label>
 	<%= text_field 'document', 'title', :size => 60%></p>

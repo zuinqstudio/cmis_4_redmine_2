@@ -8,7 +8,9 @@ class CmisProjectSettingController < ApplicationController
     setting = CmisProjectSetting.find_or_create(@project.id)
     begin
        setting.transaction do
+          setting.override_default = (params[:setting][:override_default].to_i == 1)
           setting.documents_base_path = params[:documents_base_path]
+          setting.use_category = (params[:setting][:use_category].to_i == 1)
           setting.save!
        end
     flash[:notice] = l(:notice_successful_update)
