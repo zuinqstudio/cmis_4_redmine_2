@@ -28,15 +28,11 @@
 									 :method => :post,
 									 :class => 'delete',
 									 :title => l(:button_delete) %>
+    
     <span class="author"><%= attachment.author %>, <%= format_time(attachment.created_on) %></span>
 	
 	<% if (attachment.dirty) %>
-		<!--
-		<%= javascript_tag (remote_function({ :url => { :controller => 'cmis', :action => 'synchronize_attachment', :project_id => @project, :id => attachment},
-		                     :method => :post,
-		                     :update => 'attachment_' + attachment.id.to_s
-		                   })) %>
-		                  -->	
+		
 		<script type="text/javascript">
 			synchronize_attachment(<%= @project.id %>, <%= attachment.id %>);
 		</script>

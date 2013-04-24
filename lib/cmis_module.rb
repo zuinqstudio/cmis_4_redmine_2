@@ -100,8 +100,13 @@ module CmisModule
   
   def get_document_relative(path, project_id, isRelativePath)
     parent = get_folder_relative(get_path_to_folder(path), project_id, isRelativePath)
-    aux = parent.items.select {|o| o.is_a?(ActiveCMIS::Document) && o.cmis.name == get_document_name(path)}
-    return aux.first
+    #if document doesn't exist on cmis, parent may be null
+    if(parent)
+      aux = parent.items.select {|o| o.is_a?(ActiveCMIS::Document) && o.cmis.name == get_document_name(path)}
+      return aux.first
+    else
+      return nil
+    end
   end 
   
   def remove_document(path, project_id)
@@ -215,7 +220,6 @@ module CmisModule
   
   def get_folder_relative(path, project_id, isRelativePath)
     res = nil
-    
     if (path == nil or path.empty? or path == "/")
       # Path is root folder
       if (isRelativePath)
@@ -228,7 +232,6 @@ module CmisModule
     else
       # Build path
       parentPath = get_path_to_folder(path);
-      
       # Get the immediate parent folder
       parent = get_folder_relative(parentPath, project_id, isRelativePath);
       
@@ -243,7 +246,6 @@ module CmisModule
       # Reload folder content
       res.reload
     end
-    
     return res
     
   end
