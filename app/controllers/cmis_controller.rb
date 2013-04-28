@@ -30,7 +30,7 @@ class CmisController < ApplicationController
   default_search_scope :documents
   before_filter :find_project, :only => [:index, :new, :synchronize_attachment, :check_attachments_sync, :check_new_attachments]
   before_filter :find_document, :only => [:show, :destroy, :edit, :add_attachment, :check_attachments_sync, :check_new_attachments]
-  before_filter :find_attachment, :only => [:destroy_attachment, :download_attachment]
+  before_filter :find_attachment, :only => [:destroy_attachment, :download_attachment, :update_attachment]
   
   helper :attachments
 
@@ -104,6 +104,7 @@ class CmisController < ApplicationController
   end
   
   def add_attachment
+    logger.warn "cmis_add_attachment"
     begin
       attachments = CmisAttachment.attach_files(@project, @document, params[:attachments])
       render_attachment_warning_if_needed(@document)
@@ -151,10 +152,12 @@ class CmisController < ApplicationController
         filename = @attachment.nombre_archivo
   		  send_data(fichero, :type=> @attachment.content_type, :filename =>filename, :disposition =>'attachment')
   		else
+  		  logger.warn "pb1"
         flash[:warning]=l(:error_fichero_no_enco_cmis)
-      redirect_to  :action => 'show', :id => @document
+        redirect_to  :action => 'show', :id => @document
       end
   	rescue CmisException=>e
+      logger.warn "pb2"
   		flash[:error] = e.message
   		redirect_to :action => 'show', :id => @document  	
   	end
@@ -168,6 +171,16 @@ class CmisController < ApplicationController
   			redirect_to  :action => 'show', :id => @document
   		end
 	  rescue CmisException=>e
+      flash[:error] = e.message
+      redirect_to  :action => 'show', :id => @document
+    end
+  end
+  
+  def update_attachment
+    begin
+      attachment = CmisAttachment.update_file(@project, @attachment, params[:attachments])
+      redirect_to :action => 'show', :id => @document  
+    rescue CmisException=>e
       flash[:error] = e.message
       redirect_to  :action => 'show', :id => @document
     end
@@ -203,11 +216,12 @@ class CmisController < ApplicationController
   end
   
   def check_attachments_sync
+   
     attachments = @document.attachments
     
     begin
       cmis_connect
-      attachments.each{|attachment|      
+      attachments.each{|attachment|
         repositoryDocument = get_document(attachment.path, @project.id)
         if (!repositoryDocument)
           # Document deleted on CMIS ECM
@@ -224,9 +238,16 @@ class CmisController < ApplicationController
           diffInSeconds *= 1.days
           
           if (diffInSeconds > 60)
-            attachment.dirty = true    
+            attachment.dirty = true
+          end
+          # Check version
+          redmineVersion = attachment.version
+          repositoryVersion = repositoryDocument.attribute('cmis:versionLabel')
+          if(redmineVersion != repositoryVersion)
+            attachment.version = repositoryVersion
           end
         end
+        attachment.save
       }
     rescue Errno::ECONNREFUSED=>e
       flash[:error] = l(:unable_connect_cmis)
@@ -236,30 +257,31 @@ class CmisController < ApplicationController
   end
   
   def synchronize_attachment
-    attachment = CmisAttachment.find(params[:id])
     
-    begin
-      cmis_connect
-      repositoryDocument = get_document(attachment.path, @project.id)
-      
-      if (!repositoryDocument)
-        # Document deleted on CMIS ECM
-        attachment.deleted = true
-        attachment.dirty = false        
-        attachment.destroy
-        attachment = nil
+    attachment = CmisAttachment.find(params[:id])
+    if(attachment)
+      begin
+        cmis_connect
+        repositoryDocument = get_document(attachment.path, @project.id)
+        if (!repositoryDocument)
+          # Document deleted on CMIS ECM
+          attachment.deleted = true
+          attachment.dirty = false        
+          attachment.destroy
+          attachment = nil
         
-      else
-        # Updated
-        attachment.filesize = repositoryDocument.cmis.contentStreamLength
-        attachment.save
-        attachment.dirty = false
-      end      
+        else
+          # Updated
+          attachment.filesize = repositoryDocument.cmis.contentStreamLength
+          attachment.version = repositoryDocument.attribute('cmis:versionLabel')
+          attachment.save
+          attachment.dirty = false
+        end      
       
-    rescue Errno::ECONNREFUSED=>e
-      flash[:error] = l(:unable_connect_cmis)
+      rescue Errno::ECONNREFUSED=>e
+        flash[:error] = l(:unable_connect_cmis)
+      end
     end
-        
     render :partial => 'attachment', :locals => {:attachment => attachment}    
   end
  
@@ -339,6 +361,7 @@ class CmisController < ApplicationController
     attachment.created_on = document.cmis.creationDate
     attachment.updated_on = document.cmis.lastModificationDate
     attachment.author = User.current
+    attachment.version = document.attribute('cmis:versionLabel')
     attachment.cmis_document_id = @document.id
     
     return attachment

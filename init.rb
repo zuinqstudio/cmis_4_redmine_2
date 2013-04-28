@@ -45,7 +45,7 @@ Redmine::Plugin.register :redmine_cmis do
 
 	project_module :cmis do
 		permission :view_cmis_documents, {:cmis => [:index, :show, :download]}, :public => true
-		permission :manage_cmis_documents, :cmis => [:new, :edit, :destroy, :destroy_attachment, :synchronize, :synchronize_document, :import, :prepare_import, :add_attachment]
+		permission :manage_cmis_documents, :cmis => [:new, :edit, :destroy, :destroy_attachment, :synchronize, :synchronize_document, :import, :prepare_import, :add_attachment, :update_attachment]
 	  permission :cmis_project_setting, {:cmis_project_setting => [:show, :update]}  
 	end
 	

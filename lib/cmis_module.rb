@@ -61,6 +61,24 @@ module CmisModule
     folder.reload
   end  
   
+  def update_document(path, contentStream, project_id)
+    update_document_relative(path, contentStream, project_id, true)
+  end
+  
+  def update_document_relative(path, contentStream, project_id, isRelativePath)
+    logger.warn "update_document_relative #{path}"
+    document = get_document_relative(path, project_id, isRelativePath)
+    if(document)
+      logger.warn "#{document.inspect}"
+      logger.warn "objectId: #{document.attributes.reject {|k,v| k!= "cmis:objectId"}}"
+      documentCO = document.checkout
+      documentCO.set_content_stream(:data=>contentStream, :overwrite => true)
+      documentCO.checkin(false, "new version from redmine")
+      #document.save
+      
+    end
+  end
+  
   def copy_document(fromPath, toPath, project_id)
     copy_document_relative(fromPath, toPath, project_id, true)
   end
@@ -85,12 +103,13 @@ module CmisModule
     remove_document_relative(fromPath, isRelativePath)    
   end
   
-  def read_document(path)
-    return read_document_relative(path, true)
+  def read_document(path, project_id)
+    return read_document_relative(path, project_id, true)
   end
   
-  def read_document_relative(path, isRelativePath)
-    document = get_document_relative(path, isRelativePath)
+  def read_document_relative(path, project_id, isRelativePath)
+    document = get_document_relative(path, project_id, isRelativePath)
+    
     return document.content_stream.get_data[:data]
   end
   
