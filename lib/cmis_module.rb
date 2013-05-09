@@ -66,15 +66,11 @@ module CmisModule
   end
   
   def update_document_relative(path, contentStream, project_id, isRelativePath)
-    logger.warn "update_document_relative #{path}"
     document = get_document_relative(path, project_id, isRelativePath)
     if(document)
-      logger.warn "#{document.inspect}"
-      logger.warn "objectId: #{document.attributes.reject {|k,v| k!= "cmis:objectId"}}"
       documentCO = document.checkout
       documentCO.set_content_stream(:data=>contentStream, :overwrite => true)
       documentCO.checkin(false, "new version from redmine")
-      #document.save
       
     end
   end

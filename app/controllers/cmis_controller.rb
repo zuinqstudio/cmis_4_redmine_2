@@ -104,7 +104,6 @@ class CmisController < ApplicationController
   end
   
   def add_attachment
-    logger.warn "cmis_add_attachment"
     begin
       attachments = CmisAttachment.attach_files(@project, @document, params[:attachments])
       render_attachment_warning_if_needed(@document)
@@ -152,12 +151,10 @@ class CmisController < ApplicationController
         filename = @attachment.nombre_archivo
   		  send_data(fichero, :type=> @attachment.content_type, :filename =>filename, :disposition =>'attachment')
   		else
-  		  logger.warn "pb1"
         flash[:warning]=l(:error_fichero_no_enco_cmis)
         redirect_to  :action => 'show', :id => @document
       end
   	rescue CmisException=>e
-      logger.warn "pb2"
   		flash[:error] = e.message
   		redirect_to :action => 'show', :id => @document  	
   	end
