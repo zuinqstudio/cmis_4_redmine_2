@@ -47,6 +47,7 @@ class CmisAttachment < ActiveRecord::Base
  
   def create_cmis_att
   	logger.debug("Creating new document")
+  	project_id = CmisDocument.find(self.cmis_document_id).project_id
     if (self.created_on == nil)
   	 self.created_on = Time.now
     end
@@ -57,7 +58,7 @@ class CmisAttachment < ActiveRecord::Base
     if @temp_file && (@temp_file.size > 0) && self.path_archivo && self.nombre_archivo
       begin
     		cmis_connect
-        save_document(self.path_archivo, self.nombre_archivo, get_stream_content(@temp_file.path))
+        save_document(self.path_archivo, self.nombre_archivo, get_stream_content(@temp_file.path), project_id)
       rescue CmisException=>e
         raise e
       rescue Errno::ECONNREFUSED=>e
@@ -68,6 +69,16 @@ class CmisAttachment < ActiveRecord::Base
   
   def update_cmis_att
     self.updated_on = Time.now
+    if @temp_file && (@temp_file.size >0)
+      begin
+        cmis_connect
+        update_document(self.path, get_stream_content(@temp_file.path), CmisDocument.find(self.cmis_document_id).project_id)
+      rescue CmisException=>e
+        raise e
+      rescue Errno::ECONNREFUSED=>e
+        raise CmisException.new, l(:unable_connect_cmis)
+      end
+    end
   end
   
   def destroy_cmis_att
@@ -75,7 +86,7 @@ class CmisAttachment < ActiveRecord::Base
     if self.path != "" && self.path_archivo && self.nombre_archivo
       begin
     	 cmis_connect
-    	 remove_document(self.path)
+    	 remove_document(self.path, CmisDocument.find(self.cmis_document_id).project_id)
       rescue CmisException=>e
         raise e
       rescue Errno::ECONNREFUSED=>e
@@ -112,7 +123,7 @@ class CmisAttachment < ActiveRecord::Base
   def cmis_file
     begin
       cmis_connect
-      return read_document(self.path)
+      return read_document(self.path, CmisDocument.find(self.cmis_document_id).project_id)
     rescue CmisException=>e
       raise e
     rescue Errno::ECONNREFUSED=>e
@@ -209,6 +220,36 @@ class CmisAttachment < ActiveRecord::Base
     {:files => attached, :unsaved => document.unsaved_attachments, :warnings => warnings}
   end
    
+  def self.update_file(project, attachment, attachments)
+    attached = []
+    warnings = []
+    if attachments && attachments.is_a?(Hash) && attachments.length == 1
+      attachments.each_value do |tmp|
+      file = tmp['file']
+      desc = tmp['description']
+      next unless file && file.size > 0
+    if file && validar_nombre_fichero(file)
+      attachment.file = file
+      unless desc.empty?
+        attachment.description = desc
+      end
+      begin
+        attachment.save
+      rescue Errno::ETIMEDOUT
+        raise CmisException.new, l(:unable_connect_cmis)   
+      rescue CmisException=>e
+        raise e
+      rescue Errno::ECONNREFUSED=>e
+        raise CmisException.new, l(:unable_connect_cmis)
+      end
+    else
+      warnings << l(:error_conexion_cmis)
+    end
+      end
+    end
+    {:warnings => warnings}
+  end
+  
   def self.get_nombre_si_repetido(nombre_archivo, path_archivo, document)
   	repetido = CmisAttachment.find(:first, :conditions =>["cmis_document_id= ? and path= ?", document.id.to_s  ,  path_archivo + nombre_archivo])
   	if repetido # si hay un documento ya con ese nombre, le meto el timestamp

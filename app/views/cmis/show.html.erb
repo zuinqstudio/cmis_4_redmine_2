@@ -21,8 +21,9 @@
 </div>
 
 <h2><%=h @document.title %></h2>
-
-<p><em><%=h @document.category.name %><br />
+<% if(@document.category) %>
+  <p><em><%=h @document.category.name %><br />
+<% end %>
 <%= format_date @document.created_on %></em></p>
 <div class="wiki">
 <%= textilizable @document.description, :attachments => @document.attachments %>
