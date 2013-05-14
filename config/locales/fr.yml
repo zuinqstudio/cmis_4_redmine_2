@@ -1,0 +1,65 @@
+# Encoding: UTF-8
+# Written by: Zuinq Studio
+# Email: info@zuinqstudio.com 
+# Web: http://www.zuinqstudio.com 
+
+# This work is licensed under a Creative Commons Attribution 3.0 License.
+# [ http://creativecommons.org/licenses/by/3.0/ ]
+
+# This means you may use it for any purpose, and make any changes you like.
+# All we ask is that you include a link back to our page in your credits.
+
+# Last but not least, this project was supported by Bonsai Meme - http://www.bmeme.com
+
+# Looking forward your comments and suggestions! info@zuinqstudio.com
+
+# FR Translation by Bruno Spyckerelle
+
+fr:
+  permission_view_cmis_documents: "Voir les documents"
+  permission_manage_cmis_documents: "Gérer les documents"
+  label_usuario_cmis: "Cmis Utilisateur"
+  label_password_usuario_cmis: "Cmis Mot de passe"
+  label_path_base_documentos: "Chemin de base"	
+  formato_nombre_fichero: "Fichier"
+  text_modificado: "Mis à jour"
+  field_category: "Catégorie"
+  formato_nombre_titulo: "Titre"
+  field_description: "Description"
+  label_titulo_configuracion: "Information"
+  label_info_configuracion: "Vous devez entrer un utilisateur du serveur CMIS. Vous devez aussi indiquer un chemin de base par défaut pour les documents, qui ne doit pas contenir de caractères spéciaux"
+  error_conexion_cmis: "Erreur de connexion Cmis. Veuillez vérifier la configuration du plugin"
+  warning_falta_archivo: "Vous devez sélectionner un fichier"
+  warning_error_nombre_archivo: "Nom de fichier incorrect : le nom de fichier ne doit pas contenir de caractères spéciaux"
+  error_fichero_no_enco_cmis: "Impossible de trouver le fichier sur le serveur CMIS"
+  error_caracteres_finales: "Erreur : les caractères suivants ne sont pas permis à la fin du nom du fichier : * % ? & : ; | < > / + ¬ £ . (espace non permis)"
+  label_sincronizar_cmis: "Synchroniser Cmis"
+  label_sincronizacion_cmis: "Synchronisation Cmis"
+  label_document_import: "Importer un document Cmis"
+  label_documentos_eliminados_cmis: "Documents supprimés de l'espace Cmis"
+  label_documentos_anyadidos_cmis: "Documents ajoutés dans l'espace Cmis"
+  label_no_enco_ficheros_sincronizar: "Aucun fichier à synchroniser trouvé"
+  label_ayuda_sincronizar: "Aide synchroniser Cmis"
+  label_info_sincronizacion: "Vous pouvez envoyer vos fichiers de votre serveur Cmis à partir de cet onglet. Sélectionner les fichiers que vous souhaitez importer."
+  button_import: "Importer"
+  label_filesize_reached: "You have exceeded the upload limit ({{value}} Mb)."
+  label_por: "par"
+  cmis_subject_add_document: "Document ajouter par {{author}} au projet {{proyecto}}."
+  cmis_message_add_document: "L'utilisateur {{author}} a ajouté {{documento}} au projet {{proyecto}}."
+  documento_repetido: "Un document avec le même nom existe déjà."
+  documento_sincronizado: "Documento sincronizado correctamente ({{anadidos}} ficheros añadido/s, {{eliminados}} fichero/s eliminados)"
+  label_server_url: "Server url"
+  unable_connect_cmis: "Impossible de se connecter au serveur Cmis. Veuillez vérifier que le serveur est actif et que la configuration est correcte."
+  repository_not_found: "Imposible de trouver le dépot Cmis. Veuillez vérifier que la configuration est correcte."
+  cmis_authentication_failed: "Authentification Cmis impossible. Veuillez vérifier que la configuration est correcte."
+  label_repository_id: "ID du dépot Cmis"
+  cmis_documents: "Espaces Cmis"
+  sync_cmis_spaces: "Sync. espaces Cmis"
+  confirm_sync_cmis_spaces: "Les documents non présents dans Redmine seront importés, continuer ?"
+  cmis_couldnt_find_category: "Certaines catégories de document n'ont pas été trouvées."
+  cmis_documents_sync_succeded: "Synchronisation des documents Cmis complétée."
+  cmis: "Documents CMIS"
+  unknown: "Inconnu"
+  label_use_category: "Utiliser les catégories de documents"
+  field_use_category: "Utiliser les catégories de documents"
+  field_override_default: "Utiliser les paramètres spécifiques du projet"

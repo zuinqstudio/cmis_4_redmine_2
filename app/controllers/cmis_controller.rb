@@ -30,14 +30,19 @@ class CmisController < ApplicationController
   default_search_scope :documents
   before_filter :find_project, :only => [:index, :new, :synchronize_attachment, :check_attachments_sync, :check_new_attachments]
   before_filter :find_document, :only => [:show, :destroy, :edit, :add_attachment, :check_attachments_sync, :check_new_attachments]
-  before_filter :find_attachment, :only => [:destroy_attachment, :download_attachment]
+  before_filter :find_attachment, :only => [:destroy_attachment, :download_attachment, :update_attachment]
   
   helper :attachments
 
   unloadable
 
   def index
-    @sort_by = %w(category date title author).include?(params[:sort_by]) ? params[:sort_by] : 'category'
+    #if categories are not used, fall back to title
+    if(CmisProjectSetting.use_category(params[:project_id]))
+        @sort_by = %w(category date title author).include?(params[:sort_by]) ? params[:sort_by] : 'category'
+    else
+        @sort_by = %w(date title author).include?(params[:sort_by]) ? params[:sort_by] : 'title'
+    end
   	@documents = CmisDocument.find :all, :conditions => ["project_id=" + @project.id.to_s]
   
   	case @sort_by
@@ -46,7 +51,13 @@ class CmisController < ApplicationController
 	    when 'title'
 	      @grouped = @documents.group_by {|d| d.title.first.upcase}
 	    when 'author'
-	      @grouped = @documents.group_by {|d| d.author.name.upcase}
+	      @grouped = @documents.group_by {|d| 
+	        if d.author
+            d.author.name.upcase
+	        else
+	          t(:unknown)
+	        end
+	        }
 	    else
 	      @grouped = @documents.group_by(&:category)
     end
@@ -71,7 +82,7 @@ class CmisController < ApplicationController
   	      render_attachment_warning_if_needed(@document)
   		  
     		  attachments[:warnings].each{|warning|
-    			flash[:warning]=warning
+    		    flash[:warning]=warning
     		  }
     		  
     		  subject = l(:cmis_subject_add_document, :author => User.current, :proyecto => @project.name)
@@ -141,7 +152,7 @@ class CmisController < ApplicationController
   		  send_data(fichero, :type=> @attachment.content_type, :filename =>filename, :disposition =>'attachment')
   		else
         flash[:warning]=l(:error_fichero_no_enco_cmis)
-      redirect_to  :action => 'show', :id => @document
+        redirect_to  :action => 'show', :id => @document
       end
   	rescue CmisException=>e
   		flash[:error] = e.message
@@ -162,12 +173,22 @@ class CmisController < ApplicationController
     end
   end
   
+  def update_attachment
+    begin
+      attachment = CmisAttachment.update_file(@project, @attachment, params[:attachments])
+      redirect_to :action => 'show', :id => @document  
+    rescue CmisException=>e
+      flash[:error] = e.message
+      redirect_to  :action => 'show', :id => @document
+    end
+  end
+  
   def check_new_attachments
     attachments = @document.attachments
     
     begin
       cmis_connect
-      repositoryDocuments = get_documents_in_folder(@document.path)
+      repositoryDocuments = get_documents_in_folder(@document.path, @project.id)
       repositoryDocuments.each{|repositoryDoc|
         # Check if the cmisDocument is not mapped on redmine
         found = false
@@ -192,12 +213,13 @@ class CmisController < ApplicationController
   end
   
   def check_attachments_sync
+   
     attachments = @document.attachments
     
     begin
       cmis_connect
-      attachments.each{|attachment|      
-        repositoryDocument = get_document(attachment.path)
+      attachments.each{|attachment|
+        repositoryDocument = get_document(attachment.path, @project.id)
         if (!repositoryDocument)
           # Document deleted on CMIS ECM
           attachment.dirty = true
@@ -213,9 +235,16 @@ class CmisController < ApplicationController
           diffInSeconds *= 1.days
           
           if (diffInSeconds > 60)
-            attachment.dirty = true    
+            attachment.dirty = true
+          end
+          # Check version
+          redmineVersion = attachment.version
+          repositoryVersion = repositoryDocument.attribute('cmis:versionLabel')
+          if(redmineVersion != repositoryVersion)
+            attachment.version = repositoryVersion
           end
         end
+        attachment.save
       }
     rescue Errno::ECONNREFUSED=>e
       flash[:error] = l(:unable_connect_cmis)
@@ -225,48 +254,43 @@ class CmisController < ApplicationController
   end
   
   def synchronize_attachment
-    attachment = CmisAttachment.find(params[:id])
     
-    begin
-      cmis_connect
-      repositoryDocument = get_document(attachment.path)
-      
-      if (!repositoryDocument)
-        # Document deleted on CMIS ECM
-        attachment.deleted = true
-        attachment.dirty = false        
-        attachment.destroy
-        attachment = nil
+    attachment = CmisAttachment.find(params[:id])
+    if(attachment)
+      begin
+        cmis_connect
+        repositoryDocument = get_document(attachment.path, @project.id)
+        if (!repositoryDocument)
+          # Document deleted on CMIS ECM
+          attachment.deleted = true
+          attachment.dirty = false        
+          attachment.destroy
+          attachment = nil
         
-      else
-        # Updated
-        attachment.filesize = repositoryDocument.cmis.contentStreamLength
-        attachment.save
-        attachment.dirty = false
-      end      
+        else
+          # Updated
+          attachment.filesize = repositoryDocument.cmis.contentStreamLength
+          attachment.version = repositoryDocument.attribute('cmis:versionLabel')
+          attachment.save
+          attachment.dirty = false
+        end      
       
-    rescue Errno::ECONNREFUSED=>e
-      flash[:error] = l(:unable_connect_cmis)
+      rescue Errno::ECONNREFUSED=>e
+        flash[:error] = l(:unable_connect_cmis)
+      end
     end
-        
     render :partial => 'attachment', :locals => {:attachment => attachment}    
   end
  
-  def sync_cmis_spaces
-    
-    begin
-      cmis_connect
-
-      # For each project, search for cmis folders under its path
-      # Each of these folders should map to a doc category (in human language)
-      projects = Project.find(:all)      
-      projects.each do | p |
-        repo_categories = get_folders_in_folder(p.identifier)
-        repo_categories.each do | c |
+  def sync_cmis_space(p)
+      repo_first_level = get_folders_in_folder(p.identifier, p.id)
+      repo_first_level.each do | c |
+        #if categories are used, first level correspond to a category
+        #else it the name of the document
+        if(CmisProjectSetting.use_category(p.id))
           category = Enumeration.find(:first, :conditions => ['type = ? AND name = ?', 'DocumentCategory', c.cmis.name.humanize])
-          
           if category
-            repo_documents = get_folders_in_folder(p.identifier + "/" + c.cmis.name)
+            repo_documents = get_folders_in_folder(p.identifier + "/" + c.cmis.name, p.id)
             repo_documents.each do | d |
               document = map_repository_folder_to_redmine_doc(p, d, category)
               if !CmisDocument.find(:first, :conditions => ['path = ?', document.path])
@@ -277,9 +301,41 @@ class CmisController < ApplicationController
             logger.debug("Document category '" + c.cmis.name.humanize + "' couldn't be found")
             flash[:warning] = l(:cmis_couldnt_find_category)
           end
-          
           category = nil
-        end
+        else
+          document = map_repository_folder_to_redmine_doc(p, c, nil)
+          if !CmisDocument.find(:first, :conditions => ['path = ?', document.path])
+            document.save
+          end
+        end        
+      end
+  end
+  
+  def sync_cmis_project
+    project_id = params[:project_id]
+    project = Project.find(project_id)
+    begin
+      cmis_connect
+      sync_cmis_space(project)
+      flash[:notice] = l(:cmis_documents_sync_succeded) 
+    rescue Errno::ECONNREFUSED=>e
+        flash[:error] = l(:unable_connect_cmis)
+    end
+    
+    redirect_to :back
+ 
+  end
+  
+  def sync_cmis_spaces
+    
+    begin
+      cmis_connect
+
+      # For each project, search for cmis folders under its path
+      # Each of these folders should map to a doc category (in human language)
+      projects = Project.find(:all)      
+      projects.each do | p |
+        sync_cmis_space(p)
       end
       flash[:notice] = l(:cmis_documents_sync_succeded)  
     
@@ -302,6 +358,7 @@ class CmisController < ApplicationController
     attachment.created_on = document.cmis.creationDate
     attachment.updated_on = document.cmis.lastModificationDate
     attachment.author = User.current
+    attachment.version = document.attribute('cmis:versionLabel')
     attachment.cmis_document_id = @document.id
     
     return attachment
@@ -311,7 +368,9 @@ class CmisController < ApplicationController
     document = CmisDocument.new
     
     document.project_id = project.id
-    document.category_id = category.id
+    if(category)
+      document.category_id = category.id
+    end
     document.author_id = User.current
     document.title = folder.cmis.name
     document.path = CmisDocument.document_category_path(project, category, document)

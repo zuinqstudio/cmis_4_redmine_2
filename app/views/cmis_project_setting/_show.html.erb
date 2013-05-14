@@ -1,0 +1,34 @@
+
+<div id="cmis_project_setting">
+
+<%
+    @cmis_project_setting = CmisProjectSetting.find_or_create(@project.id)
+%>
+
+<%= labelled_form_for :setting, @cmis_project_setting,
+                             :url => {:controller => 'cmis_project_setting',
+                             :action => 'update', :id => @project, :tab => 'cmis',
+                             :partial => 'cmis_project_setting/update'} do |f| %>
+<%= error_messages_for 'cmis_project_setting' %>
+    <div class="box">
+<p>
+  <%= f.check_box 'override_default' %>
+</p>
+
+<p>
+<label><%=l(:label_path_base_documentos)%></label>
+  <%= text_field_tag 'documents_base_path', @cmis_project_setting.documents_base_path %>
+</p>
+
+<p>
+  <%= f.check_box 'use_category' %>
+</p>
+
+<p>
+	<label><%=l(:cmis_documents)%></label>
+	<%= link_to l(:sync_cmis_spaces), {:controller => 'cmis', :action => 'sync_cmis_project', :project_id => @project}, :confirm => l(:confirm_sync_cmis_spaces), :class => 'icon icon-reload' %>
+</p>
+</div>
+ <%= submit_tag l(:button_update) %>
+ <% end %>
+</div>

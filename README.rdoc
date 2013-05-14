@@ -10,10 +10,10 @@
 - Install the activecmis gem, as described on 
 	http://www.xaop.com/blog/2010/04/13/gentle-introduction-to-activecmis/
 - Include activecmis and nokogiri gems in your Gemfile like this.-
-    gem 'active_cmis', '0.3.2'
+    gem 'active_cmis', '~>0.3.3'
     gem 'nokogiri'
 - Unzip the plugin in your <tt>redmine/plugins/</tt> folder.
-- Migrate database with rake <tt>db:migrate_plugins</tt>
+- Migrate database with <tt>rake redmine:plugins:migrate</tt>
 - Once the plugin is installed, you must open the plugin configuration in Admin->Plugins_Configuration, 
   and configure your Cmis connection (url, repository Id, user/password and documents base path)
 - Enjoy!

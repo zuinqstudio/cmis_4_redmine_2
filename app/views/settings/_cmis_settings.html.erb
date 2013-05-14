@@ -35,6 +35,11 @@
   <%= text_field_tag 'settings[documents_path_base]', settings['documents_path_base'] %>
 </p>
 <p>
+  <label><%=l(:label_use_category)%></label>
+  <%= check_box_tag 'settings[use_category]', settings['use_category'], settings['use_category'] %>
+</p>
+
+<p>
 	<label><%=l(:cmis_documents)%></label>
 	<%= link_to l(:sync_cmis_spaces), {:controller => 'cmis', :action => 'sync_cmis_spaces'}, :confirm => l(:confirm_sync_cmis_spaces), :class => 'icon icon-reload' %>
 </p>

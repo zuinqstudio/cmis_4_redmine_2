@@ -34,7 +34,9 @@ class CmisDocument < ActiveRecord::Base
 
   acts_as_searchable :columns => ['title', "#{table_name}.title"], :include => :project
 
-  validates_presence_of :project, :title, :category
+# category is now optional
+#  validates_presence_of :project, :title, :category
+  validates_presence_of :project, :title
   validates_length_of :title, :maximum => 60 
 
   attr_accessor :unsaved_attachments
@@ -59,7 +61,7 @@ class CmisDocument < ActiveRecord::Base
     
     begin
       cmis_connect
-      save_folder(path)
+      save_folder(path, self.project_id)
     rescue CmisException=>e
       raise e
     rescue Errno::ECONNREFUSED=>e
@@ -101,7 +103,7 @@ class CmisDocument < ActiveRecord::Base
     begin
       cmis_connect
   		logger.debug("Removing folder")
-  		remove_folder(self.path)
+  		remove_folder(self.path, self.project_id)
   		self.attachments.each{|attachment|
   	    # Clear attachment route, the file it's been destroyed with the folder
   		  attachment.path = ""
