@@ -14,7 +14,7 @@
 %>
 
 <% if (attachment != nil) %>
-<div id="attachment_<%= attachment.id %>">
+  <div id="attachment_<%= attachment.id %>">
 	<% if (attachment.dirty) %>
 		<span class="attachmentDirty">[u]</span>
 	<% else %>
@@ -32,7 +32,12 @@
     
     <% if authorize_for('cmis', 'update_attachment') %>
   		
-  			<%= link_to image_tag('reload.png'), {:controller => 'cmis', :action => 'show'}, :onclick => "$('#update_attachment_form_#{attachment.id.to_s}').show(); return false;", :id => 'update_file_link_'+attachment.id.to_s %>
+  			<%= link_to image_tag('reload.png'), 
+  						{:controller => 'cmis', :action => 'show'}, 
+  						:onclick => "$('#update_attachment_form_#{attachment.id.to_s}').show(); return false;", 
+  						:id => 'update_file_link_'+attachment.id.to_s,
+  						:title => l(:button_update),
+  						:class => 'update' %>
   		
     <% end %>
     
@@ -41,11 +46,11 @@
 	
 	<%= form_tag({ :controller => 'cmis', :action => 'update_attachment', :id => attachment.id }, :multipart => true, :id => "update_attachment_form_"+attachment.id.to_s, :style => "display:none;") do %>
   		<div class="box">
-  		   <%= render :partial => 'form_update_attachment' %>
+  		  <%= render :partial => 'form_update_attachment' %>
   		
-  		<%= submit_tag l(:button_update) %>
+  		  <%= submit_tag l(:button_update) %>
   		</div>
-  		<% end %> 
+    <% end %> 
 	
 	<% if (attachment.dirty) %>
 		
