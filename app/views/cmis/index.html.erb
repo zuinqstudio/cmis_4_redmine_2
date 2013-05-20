@@ -15,13 +15,6 @@
 <div class="contextual">
 	<%= link_to l(:label_document_new), {:controller => 'cmis', :action => 'new', :project_id => @project}, :class => 'icon icon-add',
       :onclick => 'showAndScrollTo("add-document", "document_title"); return false;' if User.current.allowed_to?(:manage_cmis_documents, @project) %>
-
-<!--
-	<%= link_to_if_authorized l(:label_document_new), 
-								{:controller => 'cmis', :action => 'new', :project_id => @project}, 
-								:class => 'icon icon-add',
-								:onclick => 'Element.show("add-document"); Form.Element.focus("document_title"); return false;'								%>
--->
 </div>
 
 <div id="add-document" style="display:none;">
@@ -34,23 +27,6 @@
 	</p>
 	<% end %>
 </div>
-
-<!--
-<div id="add-document" style="display:none;">
-	<h2><%=l(:label_document_new)%></h2>
-	<% form_tag({:controller => 'cmis', :action => 'new', :project_id => @project}, :class => "tabular", :multipart => true) do %>
-		<%= render :partial => 'cmis/form' %>
-		<div class="box">
-			<p>
-				<label><%=l(:label_attachment_plural)%></label>
-				<%= render :partial => 'form_attachment' %>
-			</p>
-		</div>
-		<%= submit_tag l(:button_create) %>
-		<%= link_to l(:button_cancel), "#", :onclick => 'Element.hide("add-document")' %>
-	<% end %>
-</div>
--->
 
 <h2><%=l(:label_document_plural)%></h2>
 
