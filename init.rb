@@ -25,7 +25,7 @@ Rails.configuration.to_prepare do
 end
 
 Redmine::Plugin.register :redmine_cmis do
-	name 'Redmine 2.x Cmis Plugin'
+	name 'Redmine 3.x Cmis Plugin'
 	author 'Zuinq Studio'
 	description 'Store project files on your Cmis server'
 	version '0.0.3'
