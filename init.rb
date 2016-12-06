@@ -28,7 +28,7 @@ Redmine::Plugin.register :redmine_cmis do
 	name 'Redmine 2.x Cmis Plugin'
 	author 'Zuinq Studio'
 	description 'Store project files on your Cmis server'
-	version '0.0.2'
+	version '0.0.3'
 	url 'http://www.zuinqstudio.com/en/funny-experiments-downloads'
 	author_url 'http://www.zuinqstudio.com'
 

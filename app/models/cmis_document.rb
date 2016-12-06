@@ -32,7 +32,7 @@ class CmisDocument < ActiveRecord::Base
   belongs_to :category, :class_name => "DocumentCategory", :foreign_key => "category_id"
   belongs_to :project
 
-  acts_as_searchable :columns => ['title', "#{table_name}.title"], :include => :project
+  acts_as_searchable :columns => ['title', "#{table_name}.title"], :scope => preload(:project)
 
 # category is now optional
 #  validates_presence_of :project, :title, :category
@@ -121,7 +121,7 @@ class CmisDocument < ActiveRecord::Base
   end
   
   def attachments
-    return CmisAttachment.find(:all, :conditions => ["cmis_document_id=" + self.id.to_s] , :order => "created_on DESC")
+    return CmisAttachment.where(cmis_document_id: self.id.to_s).order("created_on DESC").all
   end
   
   def self.category_path(project, category)
@@ -142,7 +142,7 @@ class CmisDocument < ActiveRecord::Base
   end
   
   def self.check_repeated(document)
-    repeated = CmisDocument.find(:first, :conditions =>["path= ?", document.path])
+    repeated = CmisDocument.where(path: document.path).first
     if repeated
       return true
     else

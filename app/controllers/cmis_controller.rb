@@ -43,7 +43,7 @@ class CmisController < ApplicationController
     else
         @sort_by = %w(date title author).include?(params[:sort_by]) ? params[:sort_by] : 'title'
     end
-  	@documents = CmisDocument.find :all, :conditions => ["project_id=" + @project.id.to_s]
+  	@documents = CmisDocument.where(project_id: @project.id.to_s).all
   
   	case @sort_by
 	    when 'date'
@@ -66,7 +66,7 @@ class CmisController < ApplicationController
   end
   
   def new
-   @document = CmisDocument.new(params[:document])
+   @document = CmisDocument.new(cmis_params)
    @document.author = User.current
    @document.project_id = @project.id
    # Check the path doesn't exists
@@ -120,7 +120,7 @@ class CmisController < ApplicationController
     @categories = DocumentCategory.all
     begin
       if request.post?    	      	  
-    	  if @document.update_attributes(params[:document])
+    	  if @document.update_attributes(cmis_params)
           flash[:notice] = l(:notice_successful_update)
           redirect_to :action => 'show', :id => @document
         end
@@ -288,12 +288,12 @@ class CmisController < ApplicationController
         #if categories are used, first level correspond to a category
         #else it the name of the document
         if(CmisProjectSetting.use_category(p.id))
-          category = Enumeration.find(:first, :conditions => ['type = ? AND name = ?', 'DocumentCategory', c.cmis.name.humanize])
+          category = Enumeration.where('type = ? AND name = ?', 'DocumentCategory', c.cmis.name.humanize).first
           if category
             repo_documents = get_folders_in_folder(p.identifier + "/" + c.cmis.name, p.id)
             repo_documents.each do | d |
               document = map_repository_folder_to_redmine_doc(p, d, category)
-              if !CmisDocument.find(:first, :conditions => ['path = ?', document.path])
+              if !CmisDocument.where(path: document.path).first
                 document.save
               end
             end
@@ -304,7 +304,7 @@ class CmisController < ApplicationController
           category = nil
         else
           document = map_repository_folder_to_redmine_doc(p, c, nil)
-          if !CmisDocument.find(:first, :conditions => ['path = ?', document.path])
+          if !CmisDocument.where(path: document.path).first
             document.save
           end
         end        
@@ -333,7 +333,7 @@ class CmisController < ApplicationController
 
       # For each project, search for cmis folders under its path
       # Each of these folders should map to a doc category (in human language)
-      projects = Project.find(:all)      
+      projects = Project.all      
       projects.each do | p |
         sync_cmis_space(p)
       end
@@ -402,5 +402,8 @@ class CmisController < ApplicationController
      render_404
   end
 
+  def cmis_params
+    params.require(:document).permit(:title, :description, :category_id, :attachments)
+  end
   
 end

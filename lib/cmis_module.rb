@@ -81,7 +81,7 @@ module CmisModule
   
   def copy_document_relative(fromPath, toPath, project_id, isRelativePath)
     # Read document content
-    content = read_document_relative(fromPath, isRelativePath)
+    content = read_document_relative(fromPath, project_id, isRelativePath)
     
     # Save document into destination folder
     save_document_relative(get_path_to_folder(toPath), get_document_name(toPath), content, project_id, isRelativePath)    
@@ -96,7 +96,7 @@ module CmisModule
     copy_document_relative(fromPath, toPath, project_id, isRelativePath)
     
     # Remove old document
-    remove_document_relative(fromPath, isRelativePath)    
+    remove_document_relative(fromPath, project_id, isRelativePath)    
   end
   
   def read_document(path, project_id)
@@ -199,7 +199,7 @@ module CmisModule
       save_folder_relative(toPath, project_id, isRelativePath)
       
       # Get source folder
-      sourceFolder = get_folder_relative(fromPath, isRelativePath)
+      sourceFolder = get_folder_relative(fromPath, project_id, isRelativePath)
       
       # Copy subfolders in folder
       if sourceFolder != nil
@@ -209,7 +209,7 @@ module CmisModule
       
         # Remove documents in folder
         sourceFolder.items.select {|o| o.is_a?(ActiveCMIS::Document)}.map {|o|
-          copy_document_relative(compose_path(fromPath, o.name), compose_path(toPath, o.name), isRelativePath)
+          copy_document_relative(compose_path(fromPath, o.name), compose_path(toPath, o.name), project_id, isRelativePath)
         }
       end
     end
@@ -225,7 +225,7 @@ module CmisModule
       copy_folder_relative(fromPath, toPath, isRelativePath)
     
       # Remove old document
-      remove_folder_relative(fromPath, isRelativePath)
+      remove_folder_relative(fromPath, project_id, isRelativePath)
     end    
   end
   
