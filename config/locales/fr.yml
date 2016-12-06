@@ -16,6 +16,7 @@
 # FR Translation by Bruno Spyckerelle
 
 fr:
+  label_use_category: "Catégorie utilisateur"
   permission_view_cmis_documents: "Voir les documents"
   permission_manage_cmis_documents: "Gérer les documents"
   label_usuario_cmis: "Cmis Utilisateur"
