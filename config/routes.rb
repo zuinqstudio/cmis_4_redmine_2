@@ -17,5 +17,5 @@ RedmineApp::Application.routes.draw do
   match 'sync_cmis_spaces', :controller => 'cmis', :via => [:get, :post]
   match 'projects/:project_id/cmis/:action', :controller => 'cmis', :via => [:get, :post]
   match 'projects/:project_id/:id/cmis/:action', :controller => 'cmis', :via => [:get, :post]
-  match 'projects/:id/cmis_project_setting/:action', :controller => 'cmis_project_setting', :via => [:get, :post, :put]
+  match 'projects/:id/cmis_project_setting/:action', :controller => 'cmis_project_setting', :via => [:get, :post, :put, :patch]
 end

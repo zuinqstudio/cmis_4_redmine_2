@@ -35,8 +35,8 @@ Redmine::Plugin.register :redmine_cmis do
 	menu :project_menu, :cmis, { :controller => 'cmis', :action => 'index' }, :caption => :cmis, :after => :documents, :param => :project_id
 
 	settings :default => {
-    'server_url' => 'http://localhost:8080/alfresco/service/cmis',
-    'repository_id' => 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+    'server_url' => 'http://alfresco.example.com:8080/alfresco/api/-default-/public/cmis/versions/1.0/atom',
+    'repository_id' => '-default-',
 		'server_login' => 'user',
 		'server_password' => 'password',
 		'documents_path_base' => 'REDMINE',
