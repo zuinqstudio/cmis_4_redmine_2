@@ -25,18 +25,18 @@ Rails.configuration.to_prepare do
 end
 
 Redmine::Plugin.register :redmine_cmis do
-	name 'Redmine 2.x Cmis Plugin'
+	name 'Redmine 3.x Cmis Plugin'
 	author 'Zuinq Studio'
 	description 'Store project files on your Cmis server'
-	version '0.0.2'
+	version '0.0.3'
 	url 'http://www.zuinqstudio.com/en/funny-experiments-downloads'
 	author_url 'http://www.zuinqstudio.com'
 
 	menu :project_menu, :cmis, { :controller => 'cmis', :action => 'index' }, :caption => :cmis, :after => :documents, :param => :project_id
 
 	settings :default => {
-    'server_url' => 'http://localhost:8080/alfresco/service/cmis',
-    'repository_id' => 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+    'server_url' => 'http://alfresco.example.com:8080/alfresco/api/-default-/public/cmis/versions/1.0/atom',
+    'repository_id' => '-default-',
 		'server_login' => 'user',
 		'server_password' => 'password',
 		'documents_path_base' => 'REDMINE',

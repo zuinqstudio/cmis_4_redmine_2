@@ -34,7 +34,7 @@ class CmisAttachment < ActiveRecord::Base
   acts_as_activity_provider :type => 'documents',
                             :permission => :view_cmis_documents,
                             :author_key => :author_id,
-                            :find_options => {:select => "#{CmisAttachment.table_name}.*", 
+                            :scope => {:select => "#{CmisAttachment.table_name}.*", 
                                               :joins => "LEFT JOIN #{CmisDocument.table_name} ON #{CmisDocument.table_name}.id = #{CmisAttachment.table_name}.cmis_document_id " +
                                                         "LEFT JOIN #{Project.table_name} ON #{CmisDocument.table_name}.project_id = #{Project.table_name}.id"}
 
@@ -251,7 +251,7 @@ class CmisAttachment < ActiveRecord::Base
   end
   
   def self.get_nombre_si_repetido(nombre_archivo, path_archivo, document)
-  	repetido = CmisAttachment.find(:first, :conditions =>["cmis_document_id= ? and path= ?", document.id.to_s  ,  path_archivo + nombre_archivo])
+  	repetido = CmisAttachment.where("cmis_document_id= ? and path= ?", document.id.to_s, path_archivo + nombre_archivo).first
   	if repetido # si hay un documento ya con ese nombre, le meto el timestamp
   		nombre_archivo = Time.now.to_i.to_s + "_" + nombre_archivo
   	end

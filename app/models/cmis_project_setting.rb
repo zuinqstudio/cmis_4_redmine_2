@@ -4,7 +4,7 @@ class CmisProjectSetting < ActiveRecord::Base
   belongs_to :project
   
   def self.find_or_create(pj_id)
-    setting = CmisProjectSetting.find(:first, :conditions => ['project_id = ?', pj_id])
+    setting = CmisProjectSetting.find_by project_id: pj_id
         unless setting
           setting = CmisProjectSetting.new
           setting.project_id = pj_id
